@@ -13,7 +13,7 @@ from skge import HolE, StochasticTrainer
 # Load knowledge graph 
 # N = number of entities
 # M = number of relations
-# xs = list of (subject, object, predicte) triples
+# xs = list of (subject, predicate, object) triples
 # ys = list of truth values for triples (1 = true, -1 = false)
 N, M, xs, ys = load_data('path to data')
 
