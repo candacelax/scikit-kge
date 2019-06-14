@@ -62,7 +62,7 @@ def grad_sum_matrix(idx):
 
 def unzip_triples(xys, with_ys=False):
     xs, ys = list(zip(*xys))
-    ss, os, ps = list(zip(*xs))
+    ss, ps, os = list(zip(*xs))
     if with_ys:
         return np.array(ss), np.array(ps), np.array(os), np.array(ys)
     else:
