@@ -74,6 +74,12 @@ class Model(object):
         with open(fname, 'wb') as fout:
             pickle.dump(self, fout, protocol=protocol)
 
+    def getEntityEmbeddings(self, idxs): # FIXME find better way to get this
+        return np.array([self.E[i] for i in idxs])
+
+    def getRelationEmbeddings(self, idxs):
+        return np.take(self.E, idxs)
+            
     @staticmethod
     def load(fname):
         with open(fname, 'rb') as fin:
