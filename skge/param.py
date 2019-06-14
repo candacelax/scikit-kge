@@ -40,13 +40,15 @@ class Parameter(np.ndarray):
                 arr = np.array([Parameter._init_array(sz, args[1]) for _ in range(args[0][0])])
         else:
                 arr = Parameter._init_array(args[0], args[1])
+                if len(arr.shape) == 1: # make sure dim doesn't collapse for size (1,n) or (n,1)
+                        arr = np.expand_dims(arr, 0)
+        
         arr = arr.view(cls)
         arr.name = kwargs.pop('name', None)
         arr.post = kwargs.pop('post', None)
 
         if arr.post is not None:
             arr = arr.post(arr)
-
         return arr
 
     def __array_finalize__(self, obj):
