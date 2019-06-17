@@ -39,10 +39,14 @@ class Parameter(np.ndarray):
                 sz = (args[0][1], args[0][2])
                 arr = np.array([Parameter._init_array(sz, args[1]) for _ in range(args[0][0])])
         else:
-                arr = Parameter._init_array(args[0], args[1])
-                if len(arr.shape) == 1: # make sure dim doesn't collapse for size (1,n) or (n,1)
-                        arr = np.expand_dims(arr, 0)
-        
+                pretrained = kwargs.get('pretrained')
+                if pretrained is None:
+                        arr = Parameter._init_array(args[0], args[1])
+                        if len(arr.shape) == 1: # make sure dim doesn't collapse for size (1,n) or (n,1)
+                                arr = np.expand_dims(arr, 0)
+                else:
+                        arr = np.array(pretrained) # convert torch tensor back to np
+
         arr = arr.view(cls)
         arr.name = kwargs.pop('name', None)
         arr.post = kwargs.pop('post', None)
@@ -61,6 +65,7 @@ class Parameter(np.ndarray):
     def _init_array(shape, method):
         mod = sys.modules[__name__]
         method = 'init_%s' % method
+        
         if not hasattr(mod, method):
             raise ValueError('Unknown initialization (%s)' % method)
         elif len(shape) != 2:
