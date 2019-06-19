@@ -149,7 +149,7 @@ class memoized(object):
         return functools.partial(self.__call__, obj)
 
 
-class WordEmbeddingLoss:
+class PretrainedEmbeddingLoss:
     # TODO add option to update current "baseline" word embeddings
     # TODO add option to update margins
     def __init__(self, pretrained_embeddings, pos_example_margin, neg_example_margin):
