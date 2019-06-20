@@ -1,4 +1,3 @@
-import numpy as np
 import functools, collections, torch
 from torch import rfft, irfft
 
@@ -14,11 +13,11 @@ def complex_mult(mat1, mat2): # dimensions (2, m, n) where input[0] is real and 
     return torch.stack([real1 * real2 - imag1 * imag2, real1 * imag2 + imag1 * real2], dim = -1)\
                 .transpose(0,1).transpose(0,2)
 
-def complex_conj(signal): # make imaginary dimension non-negative
-    mask = torch.stack((torch.zeros((signal.shape[1], signal.shape[2])),
-                        torch.ones((signal.shape[1], signal.shape[2]))), dim=0)
-    mask = (signal < 0).float() * mask # only values less than zero
-    signal += signal * (-2 * mask)
+def complex_conj(signal):
+    device = signal.device
+    mask = torch.stack((torch.ones((signal.shape[1], signal.shape[2])),
+                        -1*torch.ones((signal.shape[1], signal.shape[2]))), dim=0).to(device)
+    signal = signal * mask
     return signal
 
 def cconv(a, b):
@@ -41,9 +40,7 @@ def cconv(a, b):
        convolution of a and b
     """
 
-    #return fn_irfft( complex_mult( fn_rfft(a), fn_rfft(b) ) )
-    a,b = a.detach().numpy(), b.detach().numpy()
-    return torch.FloatTensor( np.fft.ifft(np.fft.fft(a) * np.fft.fft(b)).real )
+    return fn_irfft( complex_mult( fn_rfft(a), fn_rfft(b) ) )
 
 def ccorr(a, b):
     """
@@ -64,17 +61,15 @@ def ccorr(a, b):
     c: real valued array (shape N), representing the circular
        correlation of a and b
     """
-
-    #return fn_irfft( complex_conj( complex_mult( fn_rfft(a), fn_rfft(b) ) ) )
-    a,b = a.detach().numpy(), b.detach().numpy()
-    return torch.Tensor( np.fft.ifft(np.conj(np.fft.fft(a)) * np.fft.fft(b)).real )
+    return fn_irfft( complex_mult( complex_conj( fn_rfft(a)), fn_rfft(b) ) )
 
 
-def grad_sum_matrix(idx):
+def grad_sum_matrix(idx): # FIXME figure out device=device versus to(device) diff with this pytorch version
+    device = idx.device
     uidx, iinv = torch.unique(idx, return_inverse=True)
     sz = len(iinv)
-    data = torch.ones(sz)
-    row_col = torch.stack((iinv, torch.arange(sz)))
+    data = torch.ones(sz).to(device)
+    row_col = torch.stack((iinv.to(device), torch.arange(sz).to(device)))
     M = torch.sparse.FloatTensor(row_col, data)
     # normalize summation matrix so that each row sums to one
     n = torch.sparse.sum(M, dim=1).values()
@@ -177,3 +172,6 @@ class PretrainedEmbeddingLoss:
                                                          input_cosine_similarity-self._neg_example_margin)
         loss = (torch.sum(loss_positive_examples) + torch.sum(loss_neg_examples) ) / (indices.shape[0] * indices.shape[0])
         return loss
+
+
+    
